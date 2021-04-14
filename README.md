@@ -19,6 +19,11 @@ vehicle is added to encode not transported calls.
 An example solution for the instance `Call_7_Vehicle_3` could be: `[3, 3, 0, 7, 1, 7, 1, 0, 5, 5, 6, 6, 0, 4, 4, 2, 2]`.
 Call 3 is served by the first vehicle, calls 7 and 1 are served by the second, calls 5 and 6 are served by the third and calls 4 and 2 are not transported.
 
+A solution is considered to be feasible if:
+* For every vehicle, all assigned calls are compatible with it.
+* For every vehicle, no call violates its limitations in terms of capacity.
+* For every call, its position inside a vehicle does not violate any of the time limitations.
+
 Solutions are checked for feasibility and cost using functions provided by [Ramin Hasibi](https://github.com/RaminHasibi/pdp_utils).
 
 ## 3. Metaheuristic algorithms
