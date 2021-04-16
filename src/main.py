@@ -5,24 +5,32 @@ import os
 import time
 
 if __name__ == '__main__':
-    datasets = os.listdir('../datasets')
-    results = {}
+    print("Loading datasets...")
+    datasets = os.listdir('./datasets')
+    print("Datasets loaded: ", datasets)
 
-    parameters_ls = [0.40, 0.25, 0.35]
-    parameters_sa = [0.34, 0.33, 0.33, 1000000, 0.98]
-    parameters_gam = [10000, 100, 0.35]
-    all_runtimes = []
-
-    test = False
-    notes = "Test using the general adaptative metaheuristic. Related k-exchanges and smart_one_reinsert. Testing local search at the end and visited solution scoring option. 10K iter, 1 round."
+    parameters_gam = [10000, 1500, 100, 0.35]
     parameters = parameters_gam
-    num_iters = 1
+    
+    file_name = input("\nFile name: ")
+    test_r = input("Test(y/n): ")
+    test = True if test_r == "y" else False
+    if test:
+        notes = input("Test notes: ")
+        notes = "No notes" if notes == "-" else notes
+        num_iters = int(input("Number of rounds: "))
 
-    print("Computing results...")
+        print("\nRunning test...")
+    else:
+        num_iters = 10
+        print("\nRunning full simulation...")
+    
+    results = {}
+    all_runtimes = []
 
     tg_1 = time.time()
     for dataset in datasets:
-        prob = load_problem('../datasets/' + dataset)
+        prob = load_problem('./datasets/' + dataset)
         init = [0]*prob['n_vehicles']
         for i in range(1, prob['n_calls'] + 1):
             init.append(i)
@@ -36,7 +44,7 @@ if __name__ == '__main__':
         print("Current dataset: ", dataset)
         for i in range(num_iters):
             t_ini = time.time()
-            best_solution, cheapest_cost, probabilities = algorithms.general_adaptative_metaheuristic(init, init_cost, parameters_gam[0], parameters_gam[1], parameters_gam[2], prob)
+            best_solution, cheapest_cost, probabilities = algorithms.general_adaptative_metaheuristic(init, init_cost, parameters_gam[0], parameters_gam[1], parameters_gam[2], parameters_gam[3], prob)
             t_end = time.time()
 
             if cost_function(best_solution, prob) != cheapest_cost:
@@ -69,7 +77,7 @@ if __name__ == '__main__':
 
     mean_sum_runtimes = 0 
     print("Writing to file...")
-    with open('result.txt', 'w') as f:
+    with open(file_name, 'w') as f:
         if test:
             print("--- TEST --- \n", file = f)
             print("NOTES: ", notes, "\n", file = f)
@@ -78,7 +86,9 @@ if __name__ == '__main__':
 
         print("Parameters: ", parameters, "\n", file = f)
         for dataset in datasets:
-            print(dataset, ": ", results[dataset], "\n", file = f)
+            print(dataset, ": ", [results[dataset][i] for i in range(len(results[dataset])) if i > 0], file = f)
+            print("     Best found solution: ", results[dataset][0], "\n", file = f)
+
             mean_sum_runtimes += results[dataset][4]
-        print("Total runtime: ", (tg_2 - tg_1)/60, "minutes", "\n", file = f)
+        print("Total runtime: ", (tg_2 - tg_1)/60, "minutes", file = f)
         print("Mean total runtime: ", mean_sum_runtimes, file = f)

@@ -379,8 +379,8 @@ def smart_one_reinsert(solution, problem):
     zeros = [i for i, x in enumerate(base_solution) if x == 0]
     compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
 
-    #neighbors = []
-    #costs = []
+    neighbors = []
+    costs = []
     for vehicle in compatible_vehicles:
         neighbor = base_solution.copy()
         lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
