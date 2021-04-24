@@ -3,28 +3,28 @@ import numpy as np
 import algorithms
 import os
 import time
+import random
 
 if __name__ == '__main__':
     print("Loading datasets...")
     datasets = os.listdir('./datasets')
     print("Datasets loaded: ", datasets)
 
-    parameters_gam = [10000, 1500, 100, 0.35]
+    parameters_gam = [10000, 1500, 250, 0.05]
     parameters = parameters_gam
     
-    file_name = input("\nFile name: ")
-    test_r = input("Test(y/n): ")
-    test = True if test_r == "y" else False
-    if test:
-        notes = input("Test notes: ")
-        notes = "No notes" if notes == "-" else notes
-        num_iters = int(input("Number of rounds: "))
+    file_name = './output/' + input("\nFile name: ") + '.txt'
+    notes = input("Notes: ")
+    notes = "No notes" if notes == "-" else notes
+    num_iters = int(input("Number of rounds: "))
+    plot_weights = False
+    if num_iters == 1:
+        plot_r = input("Plot weights(y/n): ")
+        plot_weights = True if plot_r == "y" else False
+        
 
-        print("\nRunning test...")
-    else:
-        num_iters = 10
-        print("\nRunning full simulation...")
-    
+    print("\nRunning test...")
+
     results = {}
     all_runtimes = []
 
@@ -40,11 +40,11 @@ if __name__ == '__main__':
         runtimes = []
         costs = []
         solutions = []
-        
+
         print("Current dataset: ", dataset)
         for i in range(num_iters):
             t_ini = time.time()
-            best_solution, cheapest_cost, probabilities = algorithms.general_adaptative_metaheuristic(init, init_cost, parameters_gam[0], parameters_gam[1], parameters_gam[2], parameters_gam[3], prob)
+            best_solution, cheapest_cost, history_probas = algorithms.general_adaptative_metaheuristic(init, init_cost, parameters_gam[0], parameters_gam[1], parameters_gam[2], parameters_gam[3], prob)
             t_end = time.time()
 
             if cost_function(best_solution, prob) != cheapest_cost:
@@ -55,34 +55,28 @@ if __name__ == '__main__':
             costs.append(cheapest_cost)
             solutions.append(best_solution)
 
-            print("     Iteration: ", i + 1,"\n     Iter. duration: ", t_end - t_ini, " seconds","\n     Total time elapsed: ", (time.time() - tg_1)/60, " minutes", "\n     Probabilities: ", probabilities, "\n")
+            print("     Iteration: ", i + 1,"\n     Iter. duration: ", t_end - t_ini, " seconds","\n     Total time elapsed: ", (time.time() - tg_1)/60, " minutes", "\n     Improvement: ", 100*(init_cost - cheapest_cost)/init_cost, "% \n")
 
         cheapest_cost = min(costs)
         best_solution = solutions[costs.index(cheapest_cost)]
 
         all_runtimes.append(runtimes)
-        results[dataset] = [best_solution, np.mean(costs), cheapest_cost, 100*(init_cost - cheapest_cost)/init_cost, np.mean(runtimes)]
+        results[dataset] = [best_solution, np.mean(costs), 100*(init_cost - np.mean(costs))/init_cost, cheapest_cost, 100*(init_cost - cheapest_cost)/init_cost, np.mean(runtimes)]
+
+        if plot_weights:
+            name = dataset[:-4]
+            with open('./weights_output/' + name + '_probas.csv', 'w') as f:
+                print("swap,one_reinsert,costly_reinsert,k_reinsert,three_exchange", file = f)
+                for i in range(len(history_probas)):
+                    print(history_probas[i][0], ",", history_probas[i][1], ",", history_probas[i][2], ",", history_probas[i][3], ",", history_probas[i][4], file = f)
 
     tg_2 = time.time()
-
-    print("Checking runtimes...")
-    for i in range(num_iters):
-        for j in range(num_iters):
-            for k in range(num_iters):
-                for n in range(num_iters):
-                    for m in range(num_iters):
-                        current_runtime = all_runtimes[0][i] + all_runtimes[1][j] + all_runtimes[2][k] + all_runtimes[3][n] + all_runtimes[4][m]
-                        if current_runtime > 600:
-                            print("\nWARNING!: one combination of executions exceeds 600 seconds runtime, ", current_runtime)
 
     mean_sum_runtimes = 0 
     print("Writing to file...")
     with open(file_name, 'w') as f:
-        if test:
-            print("--- TEST --- \n", file = f)
-            print("NOTES: ", notes, "\n", file = f)
-        else:
-            print("--- RESULTS --- \n", file = f)
+        print("--- RESULTS --- \n", file = f)
+        print("NOTES: ", notes, "\n", file = f)
 
         print("Parameters: ", parameters, "\n", file = f)
         for dataset in datasets:

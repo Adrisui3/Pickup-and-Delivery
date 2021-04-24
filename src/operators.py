@@ -378,6 +378,7 @@ def smart_one_reinsert(solution, problem):
     base_solution = [x for x in solution if x != call]
     zeros = [i for i, x in enumerate(base_solution) if x == 0]
     compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
+    random.shuffle(compatible_vehicles)
 
     #neighbors = []
     #costs = []
@@ -420,3 +421,130 @@ def smart_one_reinsert(solution, problem):
 
     return solution
     #return neighbors[costs.index(min(costs))] if len(costs) > 0 else solution
+
+def find_call(call, solution):
+    zeros = [i for i, x in enumerate(solution) if x == 0]
+    first_ocurrence = solution.index(call)
+
+    for i in range(len(zeros)):
+        if first_ocurrence < zeros[i]:
+            return i
+
+    return -1
+
+def vehicle_cost(vehicle, solution, problem):
+    zeros = [i for i, x in enumerate(solution) if x == 0]
+    lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
+    route = solution[lower_bound:upper_bound]
+
+    return route_cost(vehicle, route, problem)
+
+def costly_one_reinsert(solution, problem):
+    n_calls = problem['n_calls']
+    n_vehicles = problem['n_vehicles']
+    vessel_cargo = problem['VesselCargo']
+    cargo = problem['Cargo']
+
+    calls = range(1, n_calls + 1)
+    weights = []
+    for call in range(1, n_calls + 1):
+        vehicle = find_call(call, solution)
+        solution_aux = [x for x in solution if x != call]
+        if vehicle != -1:
+            cost_init = vehicle_cost(vehicle, solution, problem)
+            cost_after = vehicle_cost(vehicle, solution_aux, problem)
+            weights.append(cost_init - cost_after)
+        else:
+            weights.append(cargo[call - 1, 3])
+    
+    call = random.choices(calls, weights = weights, k = 1)[0]
+    base_solution = [x for x in solution if x != call]
+    zeros = [i for i, x in enumerate(base_solution) if x == 0]
+    compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
+    random.shuffle(compatible_vehicles)
+
+    for vehicle in compatible_vehicles:
+        neighbor = base_solution.copy()
+        lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
+        route = base_solution[lower_bound:upper_bound]
+        best_position = (-1, -1)
+        min_cost = float('inf')
+
+        for i in range(len(route)):
+            first_insert_route = route.copy()
+            first_insert_route.insert(i, call)
+            for j in range(i, len(route)):
+                second_insert_route = first_insert_route.copy()
+                second_insert_route.insert(j, call)
+
+                if not feasible_vehicle(vehicle, second_insert_route, problem):
+                    continue
+                
+                cost = route_cost(vehicle, second_insert_route, problem)
+                if cost < min_cost:
+                    min_cost = cost
+                    best_position = (i, j)
+        
+        if len(route) > 0 and best_position == (-1, -1):
+            continue
+        elif len(route) == 0:
+            best_position = (0, 0)
+        
+        neighbor.insert(lower_bound + best_position[0], call)
+        neighbor.insert(lower_bound + best_position[1], call)
+
+        return neighbor
+
+    return solution
+
+def smart_k_reinsert(solution, problem):
+    n_calls = problem['n_calls']
+    n_vehicles = problem['n_vehicles']
+    vessel_cargo = problem['VesselCargo']
+
+    k_val = random.choice([2, 3, 4])
+    calls = random.sample(range(1, n_calls + 1), k = k_val)
+    base_solution = [x for x in solution if x not in calls]
+
+    for call in calls:
+        insert_position = []
+        zeros = [i for i, x in enumerate(base_solution) if x == 0]
+        compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
+        random.shuffle(compatible_vehicles)
+
+        for vehicle in compatible_vehicles:
+            lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
+            route = base_solution[lower_bound:upper_bound].copy()
+            best_position = (-1, -1)
+            min_cost = float('inf')
+
+            for i in range(len(route)):
+                first_insert_route = route.copy()
+                first_insert_route.insert(i, call)
+                for j in range(i, len(route)):
+                    second_insert_route = first_insert_route.copy()
+                    second_insert_route.insert(j, call)
+                    if not feasible_vehicle(vehicle, second_insert_route, problem):
+                        continue
+                    
+                    cost = route_cost(vehicle, second_insert_route, problem)
+                    if cost < min_cost:
+                        min_cost = cost
+                        best_position = (i, j)
+            
+            if len(route) > 0 and best_position == (-1, -1):
+                continue
+            elif len(route) == 0:
+                best_position = (0, 0)
+            
+            insert_position = (lower_bound + best_position[0], lower_bound + best_position[1])
+            break
+        
+        if len(insert_position) > 0:
+            base_solution.insert(insert_position[0], call)
+            base_solution.insert(insert_position[1], call)
+        else:
+            base_solution.insert(zeros[-1], call)
+            base_solution.insert(zeros[-1], call)
+    
+    return base_solution
