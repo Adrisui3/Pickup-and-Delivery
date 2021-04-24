@@ -6,7 +6,7 @@ The pick up and delivery problem with time windows consists of a series of calls
 An instance of the problem consists of a set of vehicles which has to serve a set of calls.
 * Vehicles have a home node, starting time and capacity. For every vehicle, a list of compatible calls is specified.
 * Calls consist of an origin node, a destination node, size, cost of not transporting, lower and upper bound time windows for pickup and delivery.
-* Topology of the problem is defined by a matrix of costs and times to travel from a node to another for every vehicle.
+* Topology of the problem is defined by a matrix of costs and times to travel from one node to another for every vehicle.
 
 Five example instances are provided in text files. Format is specified inside those files.
 Data about problem instances is loaded using a function provided by [Ramin Hasibi](https://github.com/RaminHasibi/pdp_utils), TA for the course.
