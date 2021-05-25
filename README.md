@@ -32,5 +32,5 @@ Three algorithms have been implemented: local search, simulated annealing and a 
   * `probA`, `probB` and `probC` are the probabilities associated with each operator.
 * `simulated_annealing(init, init_cost, max_iter, probA, probB, probC, t_ini, alpha, problem)`
   * `probA`, `probB` and `probC` are the probabilities associated with each operator. `t_ini` and `alpha` are the initial temperature and the alpha parameter respectively.
-* `general_adaptative_metaheuristic(init, init_cost, max_iter, update, beta, problem)`
+* `general_adaptative_metaheuristic(init, init_cost, max_iter, max_time, max_iter_ls, update, beta, problem)`
   * `update` parameter encodes the number of iterations after which probabilities for each operator will be updated. `beta` is used when computing the new probabilities.
