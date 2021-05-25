@@ -207,6 +207,22 @@ def feasible_vehicle(vehicle, route, problem):
     
     return True
 
+def find_call(call, solution):
+    zeros = [i for i, x in enumerate(solution) if x == 0]
+    first_ocurrence = solution.index(call)
+
+    for i in range(len(zeros)):
+        if first_ocurrence < zeros[i]:
+            return i
+
+    return -1
+
+def vehicle_cost(vehicle, solution, problem):
+    zeros = [i for i, x in enumerate(solution) if x == 0]
+    lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
+    route = solution[lower_bound:upper_bound]
+
+    return route_cost(vehicle, route, problem)
 
 #####################################################################
 
@@ -380,8 +396,8 @@ def smart_one_reinsert(solution, problem):
     compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
     random.shuffle(compatible_vehicles)
 
-    #neighbors = []
-    #costs = []
+    neighbors = []
+    costs = []
     for vehicle in compatible_vehicles:
         neighbor = base_solution.copy()
         lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
@@ -408,36 +424,19 @@ def smart_one_reinsert(solution, problem):
             continue
         elif len(route) == 0:
             best_position = (0, 0)
+            min_cost = route_cost(vehicle, [call, call], problem)
         
         neighbor.insert(lower_bound + best_position[0], call)
         neighbor.insert(lower_bound + best_position[1], call)
+        delta = min_cost - route_cost(vehicle, route, problem)
 
-        return neighbor
+        neighbors.append(neighbor)
+        costs.append(delta)
 
-        #delta = min_cost - route_cost(vehicle, route, problem)
+        #return neighbor
 
-        #neighbors.append(neighbor)
-        #costs.append(delta)
-
-    return solution
-    #return neighbors[costs.index(min(costs))] if len(costs) > 0 else solution
-
-def find_call(call, solution):
-    zeros = [i for i, x in enumerate(solution) if x == 0]
-    first_ocurrence = solution.index(call)
-
-    for i in range(len(zeros)):
-        if first_ocurrence < zeros[i]:
-            return i
-
-    return -1
-
-def vehicle_cost(vehicle, solution, problem):
-    zeros = [i for i, x in enumerate(solution) if x == 0]
-    lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
-    route = solution[lower_bound:upper_bound]
-
-    return route_cost(vehicle, route, problem)
+    #return solution
+    return neighbors[costs.index(min(costs))] if len(costs) > 0 else solution
 
 def costly_one_reinsert(solution, problem):
     n_calls = problem['n_calls']
@@ -463,6 +462,8 @@ def costly_one_reinsert(solution, problem):
     compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
     random.shuffle(compatible_vehicles)
 
+    neighbors = []
+    costs = []
     for vehicle in compatible_vehicles:
         neighbor = base_solution.copy()
         lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
@@ -489,13 +490,76 @@ def costly_one_reinsert(solution, problem):
             continue
         elif len(route) == 0:
             best_position = (0, 0)
+            min_cost = route_cost(vehicle, [call, call], problem)
         
         neighbor.insert(lower_bound + best_position[0], call)
         neighbor.insert(lower_bound + best_position[1], call)
+        delta = min_cost - route_cost(vehicle, route, problem)
 
-        return neighbor
+        neighbors.append(neighbor)
+        costs.append(delta)
 
-    return solution
+        #return neighbor
+
+    #return solution
+    return neighbors[costs.index(min(costs))] if len(costs) > 0 else solution
+
+'''
+def smart_k_reinsert(solution, problem):
+    n_calls = problem['n_calls']
+    n_vehicles = problem['n_vehicles']
+    vessel_cargo = problem['VesselCargo']
+
+    k_val = random.choice([2, 3, 4])
+    calls = random.sample(range(1, n_calls + 1), k = k_val)
+    base_solution = [x for x in solution if x not in calls]
+
+    for call in calls:
+        insert_positions = []
+        deltas = []
+        zeros = [i for i, x in enumerate(base_solution) if x == 0]
+        compatible_vehicles = [i for i in range(n_vehicles) if vessel_cargo[i, call - 1]]
+        random.shuffle(compatible_vehicles)
+
+        for vehicle in compatible_vehicles:
+            lower_bound, upper_bound = 0 if vehicle == 0 else zeros[vehicle - 1] + 1, zeros[vehicle]
+            route = base_solution[lower_bound:upper_bound].copy()
+            best_position = (-1, -1)
+            min_cost = float('inf')
+
+            for i in range(len(route)):
+                first_insert_route = route.copy()
+                first_insert_route.insert(i, call)
+                for j in range(i, len(route)):
+                    second_insert_route = first_insert_route.copy()
+                    second_insert_route.insert(j, call)
+                    if not feasible_vehicle(vehicle, second_insert_route, problem):
+                        continue
+                    
+                    cost = route_cost(vehicle, second_insert_route, problem)
+                    if cost < min_cost:
+                        min_cost = cost
+                        best_position = (i, j)
+            
+            if len(route) > 0 and best_position == (-1, -1):
+                continue
+            elif len(route) == 0:
+                best_position = (0, 0)
+                min_cost = route_cost(vehicle, [call, call], problem)
+            
+            insert_positions.append((lower_bound + best_position[0], lower_bound + best_position[1]))
+            deltas.append(min_cost - route_cost(vehicle, route, problem))
+
+        if len(deltas) > 0:
+            final_pos = insert_positions[deltas.index(min(deltas))]
+            base_solution.insert(final_pos[0], call)
+            base_solution.insert(final_pos[1], call)
+        else:
+            base_solution.insert(zeros[-1], call)
+            base_solution.insert(zeros[-1], call)
+    
+    return base_solution
+'''
 
 def smart_k_reinsert(solution, problem):
     n_calls = problem['n_calls']

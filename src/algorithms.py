@@ -1,4 +1,4 @@
-from pdp_utils import load_problem, feasibility_check, cost_function
+from pdp_utils import feasibility_check, cost_function
 import numpy as np
 import operators
 import random
@@ -135,20 +135,6 @@ def escape_algorithm(init, cheapest_cost, feasible_solutions, infeasible_solutio
             
     return new_solution
 
-def time_limit(n_calls):
-    if n_calls == 7:
-        return 10
-    elif n_calls == 18:
-        return 50
-    elif n_calls == 35:
-        return 97
-    elif n_calls == 80:
-        return 156
-    elif n_calls == 130:
-        return 275
-    else:
-        return float('inf')
-
 def update_weights(probA, probB, probC, probD, probE, beta, scores, times):
     probA = probA * (1 - beta) + beta*(scores[0]/times[0]) if times[0] > 0 else probA
     probB = probB * (1 - beta) + beta*(scores[1]/times[1]) if times[1] > 0 else probB
@@ -160,7 +146,7 @@ def update_weights(probA, probB, probC, probD, probE, beta, scores, times):
     probA, probB, probC, probD, probE = probA/suma, probB/suma, probC/suma, probD/suma, probE/suma
     
     #We make sure the algorithm does not kill any operator
-    if probA < 0.1 or probB < 0.1 or probC < 0.1 or probD < 0.1:
+    if probA < 0.1 or probB < 0.1 or probC < 0.1 or probD < 0.1 or probE < 0.1:
         deltaA, deltaB, deltaC, deltaD, deltaE = 0, 0, 0, 0, 0
         if probA < 0.1:
             deltaA = 0.1 - probA
@@ -178,11 +164,9 @@ def update_weights(probA, probB, probC, probD, probE, beta, scores, times):
             deltaD = 0.1 - probD
             probD = 0.1
         
-        '''
         if probE < 0.1:
             deltaE = 0.1 - probE
             probE = 0.1
-        '''
         
         max_prob = max(probA , probB, probC, probD, probE)
         deltas = deltaA + deltaB + deltaC + deltaD + deltaE
@@ -209,11 +193,11 @@ def stopping_criterion(max_iter, max_time, current_iter, current_time):
 
     return iterative and time
 
-def general_adaptative_metaheuristic(init, init_cost, max_iter, max_iter_ls, update, beta, problem):
+def general_adaptative_metaheuristic(init, init_cost, max_iter, max_time, max_iter_ls, update, beta, problem):
     incumbent = init
     best_solution = init
     cheapest_cost = init_cost
-    probA, probB, probC, probD, probE = 1/4, 1/4, 1/4, 1/4, 0
+    probA, probB, probC, probD, probE = 1/5, 1/5, 1/5, 1/5, 1/5
     scores, times = [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]
     current_op = -1
     feasible_solutions = dict()
@@ -221,11 +205,10 @@ def general_adaptative_metaheuristic(init, init_cost, max_iter, max_iter_ls, upd
     feasible_solutions[tuple(init)] = init_cost
     last_improvement = 0
     history_probas = [(1/5, 1/5, 1/5, 1/5, 1/5)]
-    max_time = time_limit(problem['n_calls'])
     i = 0
 
     t_ini = time.time()
-    while (time.time() - t_ini) < max_time: 
+    while stopping_criterion(max_iter, max_time, i, time.time() - t_ini): 
         if last_improvement > 1000:
             incumbent = escape_algorithm(incumbent, cheapest_cost, feasible_solutions, infeasible_solutions, problem)
             if feasible_solutions[tuple(incumbent)] < cheapest_cost:
@@ -244,9 +227,12 @@ def general_adaptative_metaheuristic(init, init_cost, max_iter, max_iter_ls, upd
         elif ran < probA + probB + probC:
             current = operators.costly_one_reinsert(incumbent, problem)
             current_op = 2
-        else:
+        elif ran < probA + probB + probC + probD:
             current = operators.smart_k_reinsert(incumbent, problem)
             current_op = 3
+        else:
+            current = operators.related_three_exchange(incumbent, problem)
+            current_op = 4
 
         times[current_op] += 1
         if tuple(current) in feasible_solutions:
