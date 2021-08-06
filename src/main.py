@@ -5,6 +5,9 @@ import os
 import time
 import random
 
+'''
+This function was used for testing purposes
+
 def time_limit(n_calls):
     if n_calls == 7:
         return 10
@@ -18,6 +21,7 @@ def time_limit(n_calls):
         return 273
     else:
         return float('inf')
+'''
 
 if __name__ == '__main__':
     print("Loading datasets...")
@@ -45,7 +49,7 @@ if __name__ == '__main__':
     tg_1 = time.time()
     for dataset in datasets:
         prob = load_problem('./datasets/' + dataset)
-        parameters_gam[1] = time_limit(prob['n_calls'])
+        parameters_gam[1] = int(input("Total running time: "))
         init = [0]*prob['n_vehicles']
         for i in range(1, prob['n_calls'] + 1):
             init.append(i)
