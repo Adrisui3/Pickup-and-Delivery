@@ -23,7 +23,7 @@ def time_limit(n_calls):
         return float('inf')
 '''
 
-if __name__ == '__main__':
+def main():
     print("Loading datasets...")
     datasets = os.listdir('./datasets')
     print("Datasets loaded: ", datasets)
@@ -106,3 +106,8 @@ if __name__ == '__main__':
             mean_sum_runtimes += results[dataset][5]
         print("Total runtime: ", (tg_2 - tg_1)/60, "minutes", file = f)
         print("Mean total runtime: ", mean_sum_runtimes, file = f)
+
+
+
+if __name__ == '__main__':
+    main()
