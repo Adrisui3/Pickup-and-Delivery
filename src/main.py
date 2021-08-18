@@ -5,24 +5,6 @@ import os
 import time
 import random
 
-'''
-This function was used for testing purposes
-
-def time_limit(n_calls):
-    if n_calls == 7:
-        return 10
-    elif n_calls == 18:
-        return 53
-    elif n_calls == 35:
-        return 97
-    elif n_calls == 80:
-        return 155
-    elif n_calls == 130:
-        return 273
-    else:
-        return float('inf')
-'''
-
 def main():
     print("Loading datasets...")
     datasets = os.listdir('./datasets')
