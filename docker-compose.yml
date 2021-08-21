@@ -1,0 +1,8 @@
+version: "3.9"
+
+services: 
+  pdp_tw:
+    image: pdp_tw_py
+    build: .
+    volumes:
+      - ./datasets:/home/pdp_tw/datasets
